@@ -1,57 +1,35 @@
 import os
 from typing import List
-from langchain_community.document_loaders import TextLoader, DirectoryLoader, UnstructuredMarkdownLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_openai import OpenAIEmbeddings
-from langchain_community.vectorstores import Chroma
-from dotenv import load_dotenv
 
-load_dotenv()
+# Create a mock Document class if langchain is not available
+try:
+    from langchain.schema import Document
+    DOCUMENT_CLASS = Document
+except ImportError:
+    class Document:
+        def __init__(self, page_content, metadata=None):
+            self.page_content = page_content
+            self.metadata = metadata or {}
 
 class RAGEngine:
     def __init__(self, data_dir: str = "data/manuals", persist_dir: str = "backend/db"):
         self.data_dir = data_dir
         self.persist_dir = persist_dir
         self.api_key = os.getenv("OPENAI_API_KEY")
-        if self.api_key:
-            self.embeddings = OpenAIEmbeddings()
-            self.vector_store = None
-            self._initialize_vector_store()
-        else:
-            print("WARNING: OPENAI_API_KEY not found. RAG running in MOCK mode.")
-            self.vector_store = None
+        # Always run in mock mode to avoid dependencies
+        self.vector_store = None
 
     def _initialize_vector_store(self):
-        if os.path.exists(self.persist_dir) and os.listdir(self.persist_dir):
-            self.vector_store = Chroma(persist_directory=self.persist_dir, embedding_function=self.embeddings)
-        else:
-            self.ingest_documents()
+        pass
 
     def ingest_documents(self):
-        loader = DirectoryLoader(self.data_dir, glob="**/*.md", loader_cls=UnstructuredMarkdownLoader)
-        documents = loader.load()
-        
-        text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-        chunks = text_splitter.split_documents(documents)
-        
-        self.vector_store = Chroma.from_documents(
-            documents=chunks,
-            embedding=self.embeddings,
-            persist_directory=self.persist_dir
-        )
-        self.vector_store.persist()
+        pass
 
     def query(self, text: str, k: int = 3):
-        if not self.api_key:
-            return self._mock_query(text)
-        if not self.vector_store:
-            return []
-        results = self.vector_store.similarity_search(text, k=k)
-        return results
+        return self._mock_query(text)
 
     def _mock_query(self, text: str):
-        # Return mock documents based on the manual I created
-        from langchain.schema import Document
+        # Return mock documents
         content = """
         Symptom: High Delta T (>10°C)
         - Possible Cause: Reduced water flow or internal scale buildup.

@@ -1,18 +1,32 @@
 import pandas as pd
 import os
 from typing import Dict, Any, List
-from langchain_openai import ChatOpenAI
-from langchain.prompts import ChatPromptTemplate
-from rag_engine import RAGEngine
+
+# Optional dependencies - only import if available
+try:
+    from langchain_openai import ChatOpenAI
+    from langchain.prompts import ChatPromptTemplate
+    LANGCHAIN_AVAILABLE = True
+except ImportError:
+    LANGCHAIN_AVAILABLE = False
+
+try:
+    from rag_engine import RAGEngine
+    RAG_AVAILABLE = True
+except ImportError:
+    RAG_AVAILABLE = False
 
 class MaintenanceWizardAgent:
     def __init__(self, model_name: str = "gpt-4-turbo-preview"):
         self.api_key = os.getenv("OPENAI_API_KEY")
-        if self.api_key:
+        if self.api_key and LANGCHAIN_AVAILABLE:
             self.llm = ChatOpenAI(model_name=model_name, temperature=0)
-            self.rag_engine = RAGEngine()
+            if RAG_AVAILABLE:
+                self.rag_engine = RAGEngine()
+            else:
+                self.rag_engine = None
         else:
-            print("WARNING: OPENAI_API_KEY not found. Running in MOCK mode.")
+            print("WARNING: OPENAI_API_KEY not found or dependencies missing. Running in MOCK mode.")
             self.llm = None
             self.rag_engine = None
         
@@ -26,8 +40,10 @@ class MaintenanceWizardAgent:
             return self._mock_analysis(query)
             
         # 1. Retrieve relevant knowledge from manuals
-        knowledge_docs = self.rag_engine.query(query)
-        knowledge_context = "\n".join([doc.page_content for doc in knowledge_docs])
+        knowledge_context = ""
+        if self.rag_engine:
+            knowledge_docs = self.rag_engine.query(query)
+            knowledge_context = "\n".join([doc.page_content for doc in knowledge_docs])
 
         # 2. Load and filter relevant logs/history
         logs_df, history_df = self.load_data()
