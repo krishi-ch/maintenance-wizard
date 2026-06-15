@@ -1,0 +1,10 @@
+record_id,date,equipment_id,issue,root_cause,action_taken,outcome
+REC-101,2025-12-15,BF-01,Low Flow Rate,Filter blockage due to silt,Cleaned primary filters,Resolved
+REC-102,2026-01-20,BF-01,High Delta T,Calcium carbonate buildup,Chemical descaling performed,Resolved
+REC-103,2026-03-05,BF-01,Pressure Drop,Stave #4 leak,Bypassed circuit and patched,Temporary fix
+REC-104,2026-06-06,BF-02,Why is the flow rate dropping on BF-01,Confirmed via Wizard Assessment,Maintenance team dispatched,Resolved
+REC-105,2026-06-06,BF-01,I need to perform a chemical descaling on the BF-01 cooling circuit. What are the mandatory safety PPE requirements and LOTO protocols I must follow according to the industrial safety manuals,Confirmed via Wizard Assessment,Maintenance team dispatched,Resolved
+REC-106,2026-06-06,BF-01,"Based on the current Delta T rise, determine the risk level. If it's critical, generate an immediate action plan that complies with LOTO-2026 protocols.",Confirmed via Wizard Assessment,Maintenance team dispatched,Resolved
+REC-107,2026-06-09,BF-01,safety protocals,Confirmed via Wizard Assessment,Maintenance team dispatched,Resolved
+REC-108,2026-06-09,BF-01,Diagnostic check,Confirmed via Wizard Assessment,Maintenance team dispatched,Resolved
+REC-109,2026-06-09,BF-01,check safety protocals,Confirmed via Wizard Assessment,Maintenance team dispatched,Resolved
