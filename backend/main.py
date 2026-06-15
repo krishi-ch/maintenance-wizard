@@ -6,7 +6,12 @@ from diagnostic_agent import MaintenanceWizardAgent
 from predictive_engine import PredictiveEngine
 from agents import MaintenanceOrchestrator
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
 import uvicorn
+import os
+
+# Load environment variables from .env file
+load_dotenv()
 
 app = FastAPI(title="Maintenance Wizard API")
 
