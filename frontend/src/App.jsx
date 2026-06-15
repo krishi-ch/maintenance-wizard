@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { 
   Wrench, 
@@ -80,8 +80,8 @@ function App() {
   const [simulatingScenario, setSimulatingScenario] = useState(null);
   const [simulationResult, setSimulationResult] = useState(null);
 
-  // Mock fleet stats
-  const fleetData = {
+  // Mock fleet stats - now dynamic!
+  const [fleetData, setFleetData] = useState({
     'BF-01': isFaultMode ? {
       flow: 32.1, temp: 16.8, status: 'EMERGENCY', flowTrend: '▼ 48%', tempTrend: '▲ 140%'
     } : {
@@ -92,7 +92,45 @@ function App() {
     'BF-04': { flow: 62.5, temp: 3.8, status: 'NORMAL', flowTrend: '▲ 0.8%', tempTrend: '▼ 1.2%' },
     'BF-05': { flow: 57.3, temp: 5.1, status: 'WARNING', flowTrend: '▼ 8.3%', tempTrend: '▲ 12.5%' },
     'BF-06': { flow: 68.9, temp: 2.9, status: 'OPTIMAL', flowTrend: '▲ 2.1%', tempTrend: '▼ 0.5%' },
-  };
+  });
+
+  // Simulate real-time data updates!
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFleetData(prev => {
+        const newData = {...prev};
+        Object.keys(newData).forEach(id => {
+          // Randomly fluctuate flow and temp slightly
+          const currentFlow = newData[id].flow;
+          const currentTemp = newData[id].temp;
+          
+          // Keep changes within reasonable bounds
+          const flowChange = (Math.random() - 0.5) * 2; // ±1 m³/h
+          const tempChange = (Math.random() - 0.5) * 0.5; // ±0.25°C
+          
+          let newFlow = Math.max(20, Math.min(75, currentFlow + flowChange));
+          let newTemp = Math.max(1, Math.min(25, currentTemp + tempChange));
+          
+          // Update status based on new values
+          let newStatus = newData[id].status;
+          if (newFlow < 40 || newTemp > 12) newStatus = 'CRITICAL';
+          else if (newFlow < 50 || newTemp > 8) newStatus = 'WARNING';
+          else if (newFlow > 60 && newTemp < 5) newStatus = 'OPTIMAL';
+          else newStatus = 'NORMAL';
+          
+          newData[id] = {
+            ...newData[id],
+            flow: Math.round(newFlow * 10) / 10,
+            temp: Math.round(newTemp * 10) / 10,
+            status: newStatus
+          };
+        });
+        return newData;
+      });
+    }, 2000); // Update every 2 seconds!
+    
+    return () => clearInterval(interval);
+  }, []);
   const flowChartData = Object.entries(fleetData).map(([id, data]) => ({ name: id, flow: data.flow }));
   const tempChartData = Object.entries(fleetData).map(([id, data]) => ({ name: id, temp: data.temp }));
 
@@ -1825,56 +1863,58 @@ Our Maintenance Wizard uses machine learning to analyze historical data and pred
                         <div 
                           key={eq}
                           onClick={() => setSelectedEq(eq)}
-                          className={`p-6 rounded-2xl border-2 transition-all hover:scale-105 cursor-pointer ${
+                          className={`p-6 rounded-2xl border-2 transition-all duration-300 hover:scale-105 cursor-pointer ${
                             selectedEq === eq
                               ? (darkMode
-                                  ? colors.bg + ' ' + colors.border.replace('500/30', '500/50') + ' shadow-xl'
-                                  : colors.bg + ' ' + colors.border.replace('500/30', '500/40') + ' shadow-lg')
+                                  ? colors.bg + ' ' + colors.border.replace('500/30', '500/50') + ' shadow-xl scale-105'
+                                  : colors.bg + ' ' + colors.border.replace('500/30', '500/40') + ' shadow-lg scale-105')
                               : (darkMode
                                   ? 'bg-slate-800/30 border-slate-700/30'
                                   : 'bg-slate-50 border-slate-200/50')
-                          }`}
+                          } hover:shadow-2xl hover:border-opacity-80`}
                         >
                           <div className="flex items-start justify-between mb-4">
-                            <div>
+                            <div className="transition-transform duration-300 hover:translate-x-1">
                               <h4 className={darkMode ? "text-xl font-black text-white mb-2" : "text-xl font-black text-slate-900 mb-2"}>Blast Furnace {eq.split('-')[1]}</h4>
                               <p className={darkMode ? "text-slate-400" : "text-slate-600"}>{['East Plant', 'West Plant', 'North Plant', 'South Plant', 'Central Plant'][idx % 5]}</p>
                             </div>
-                            {data.status === 'CRITICAL' ? (
-                              <AlertTriangle size={28} className="text-red-500" />
-                            ) : (
-                              <CheckCircle2 size={28} className={colors.text} />
-                            )}
+                            <div className="transition-transform duration-300 hover:scale-110">
+                              {data.status === 'CRITICAL' ? (
+                                <AlertTriangle size={28} className="text-red-500 animate-pulse" />
+                              ) : (
+                                <CheckCircle2 size={28} className={colors.text} />
+                              )}
+                            </div>
                           </div>
                           
                           <div className="grid grid-cols-2 gap-4">
-                            <div>
+                            <div className="transition-all duration-300 hover:bg-white/10 rounded-lg p-2">
                               <div className="flex items-center gap-2 mb-1">
-                                <Zap size={18} className={darkMode ? "text-yellow-400" : "text-yellow-600"} />
+                                <Zap size={18} className={`${darkMode ? "text-yellow-400" : "text-yellow-600"} animate-pulse`} />
                                 <span className={darkMode ? "text-sm text-slate-400" : "text-sm text-slate-600"}>Efficiency</span>
                               </div>
-                              <p className={darkMode ? "text-xl font-black text-white" : "text-xl font-black text-slate-900"}>{Math.round((data.flow / 60) * 100)}%</p>
+                              <p className={`text-xl font-black ${darkMode ? "text-white" : "text-slate-900"} transition-all duration-300`}>{Math.round((data.flow / 60) * 100)}%</p>
                             </div>
-                            <div>
+                            <div className="transition-all duration-300 hover:bg-white/10 rounded-lg p-2">
                               <div className="flex items-center gap-2 mb-1">
-                                <Thermometer size={18} className={darkMode ? "text-orange-400" : "text-orange-600"} />
+                                <Thermometer size={18} className={`${darkMode ? "text-orange-400" : "text-orange-600"} ${data.temp > 10 ? 'animate-pulse text-red-500' : ''}`} />
                                 <span className={darkMode ? "text-sm text-slate-400" : "text-sm text-slate-600"}>Temp</span>
                               </div>
-                              <p className={darkMode ? "text-xl font-black text-white" : "text-xl font-black text-slate-900"}>{data.temp}°C</p>
+                              <p className={`text-xl font-black ${darkMode ? "text-white" : "text-slate-900"} transition-all duration-300`}>{data.temp}°C</p>
                             </div>
-                            <div>
+                            <div className="transition-all duration-300 hover:bg-white/10 rounded-lg p-2">
                               <div className="flex items-center gap-2 mb-1">
-                                <Droplets size={18} className={darkMode ? "text-blue-400" : "text-blue-600"} />
+                                <Droplets size={18} className={`${darkMode ? "text-blue-400" : "text-blue-600"} ${data.flow < 45 ? 'animate-pulse text-red-500' : ''}`} />
                                 <span className={darkMode ? "text-sm text-slate-400" : "text-sm text-slate-600"}>Flow</span>
                               </div>
-                              <p className={darkMode ? "text-xl font-black text-white" : "text-xl font-black text-slate-900"}>{data.flow} m³/h</p>
+                              <p className={`text-xl font-black ${darkMode ? "text-white" : "text-slate-900"} transition-all duration-300`}>{data.flow} m³/h</p>
                             </div>
-                            <div>
+                            <div className="transition-all duration-300 hover:bg-white/10 rounded-lg p-2">
                               <div className="flex items-center gap-2 mb-1">
                                 <TrendingUp size={18} className={darkMode ? "text-emerald-400" : "text-emerald-600"} />
                                 <span className={darkMode ? "text-sm text-slate-400" : "text-sm text-slate-600"}>Uptime</span>
                               </div>
-                              <p className={darkMode ? "text-xl font-black text-white" : "text-xl font-black text-slate-900"}>{90 + idx * 2}%</p>
+                              <p className={`text-xl font-black ${darkMode ? "text-white" : "text-slate-900"} transition-all duration-300`}>{90 + idx * 2}%</p>
                             </div>
                           </div>
                         </div>
@@ -1971,15 +2011,15 @@ Our Maintenance Wizard uses machine learning to analyze historical data and pred
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   {/* Predictive Health Score */}
                   <div className={darkMode ? "backdrop-blur-xl border p-6 rounded-2xl bg-slate-900/70 border-blue-800/30" : "backdrop-blur-xl border p-6 rounded-2xl bg-white/70 border-blue-200/50 shadow-sm"}>
-                    <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center justify-between mb-6 transition-all duration-300 hover:translate-x-1">
                       <h4 className={darkMode ? "text-lg font-black text-white" : "text-lg font-black text-slate-900"}>
-                        <Activity size={20} className="inline mr-2 text-indigo-400" />
+                        <Activity size={20} className="inline mr-2 text-indigo-400 animate-pulse" />
                         Predictive Health Score
                       </h4>
-                      <AlertTriangle size={20} className={darkMode ? "text-yellow-400" : "text-yellow-600"} />
+                      <AlertTriangle size={20} className={`${darkMode ? "text-yellow-400" : "text-yellow-600"} ${fleetData[selectedEq].status === 'CRITICAL' ? 'animate-pulse text-red-500' : ''}`} />
                     </div>
                     <div className="flex items-center justify-between">
-                      <div className="relative w-32 h-32">
+                      <div className="relative w-32 h-32 transition-all duration-500 hover:scale-105">
                         <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
                           <circle cx="50" cy="50" r="40" fill="none" stroke={darkMode ? '#334155' : '#e2e8f0'} strokeWidth="8" />
                           <circle 
@@ -1989,7 +2029,13 @@ Our Maintenance Wizard uses machine learning to analyze historical data and pred
                             strokeWidth="8" 
                             strokeLinecap="round" 
                             strokeDasharray={`${2 * Math.PI * 40 * (68 + Object.keys(fleetData).indexOf(selectedEq) * 3) / 100} ${2 * Math.PI * 40}`}
-                          />
+                          >
+                            <animate attributeName="stroke-dasharray" 
+                              values={`${2 * Math.PI * 40 * 0.6} ${2 * Math.PI * 40};${2 * Math.PI * 40 * (68 + Object.keys(fleetData).indexOf(selectedEq) * 3) / 100} ${2 * Math.PI * 40}`}
+                              dur="1s"
+                              fill="freeze"
+                            />
+                          </circle>
                           <defs>
                             <linearGradient id="healthGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                               <stop offset="0%" stopColor="#f59e0b" />
@@ -1998,17 +2044,19 @@ Our Maintenance Wizard uses machine learning to analyze historical data and pred
                           </defs>
                         </svg>
                         <div className="absolute inset-0 flex items-center justify-center">
-                          <span className={darkMode ? "text-3xl font-black text-white" : "text-3xl font-black text-slate-900"}>
+                          <span className={`${darkMode ? "text-3xl font-black text-white" : "text-3xl font-black text-slate-900"} transition-all duration-300`}>
                             {68 + Object.keys(fleetData).indexOf(selectedEq) * 3}
                           </span>
                         </div>
                       </div>
                       <div className="flex-1 ml-6">
-                        <div className="mb-4">
+                        <div className="mb-4 transition-all duration-300 hover:translate-x-1">
                           <p className={darkMode ? "text-sm font-bold text-slate-400 uppercase tracking-wider" : "text-sm font-bold text-slate-600 uppercase tracking-wider"}>Status</p>
-                          <p className={darkMode ? "text-sm font-black text-amber-400" : "text-sm font-black text-amber-600"}>Good</p>
+                          <p className={`${darkMode ? "text-sm font-black text-amber-400" : "text-sm font-black text-amber-600"} ${fleetData[selectedEq].status === 'CRITICAL' ? 'text-red-500' : ''}`}>
+                            {fleetData[selectedEq].status === 'CRITICAL' ? 'Critical' : 'Good'}
+                          </p>
                         </div>
-                        <div>
+                        <div className="transition-all duration-300 hover:translate-x-1">
                           <p className={darkMode ? "text-sm font-bold text-slate-400 uppercase tracking-wider" : "text-sm font-bold text-slate-600 uppercase tracking-wider"}>Prediction</p>
                           <p className={darkMode ? "text-sm font-black text-amber-400" : "text-sm font-black text-amber-600"}>
                             {fleetData[selectedEq].status === 'CRITICAL' ? '⚠️ Immediate attention needed' : 'Schedule preventive maintenance within 2 weeks'}
