@@ -5,6 +5,7 @@ FROM python:3.11-slim
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV PORT=8000
+ENV PYTHONPATH=/app
 
 # Set working directory
 WORKDIR /app
@@ -18,12 +19,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy backend code
-COPY backend/ /app/backend/
+# Copy backend code and data
+COPY backend/ /app/
 COPY data/ /app/data/
 
 # Expose the port
 EXPOSE 8000
 
 # Start the application
-CMD ["sh", "-c", "uvicorn backend.main:app --host 0.0.0.0 --port ${PORT}"]
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT}"]
