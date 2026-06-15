@@ -50,10 +50,15 @@ import {
   Area, 
   BarChart, 
   Bar,
-  PieChart,
+  PieChart, 
   Pie,
   Cell,
-  Legend
+  Legend,
+  RadarChart,
+  Radar,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis
 } from 'recharts';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
@@ -1779,256 +1784,378 @@ Our Maintenance Wizard uses machine learning to analyze historical data and pred
 
             {activeTab === 'comparison' && (
               <div className="space-y-6">
-                {/* 2D Furnace Fleet View */}
-                <div className={darkMode ? "backdrop-blur-xl border p-6 rounded-2xl bg-slate-900/70 border-emerald-800/30" : "backdrop-blur-xl border p-6 rounded-2xl bg-white/70 border-emerald-200/50 shadow-sm"}>
-                  <h3 className={darkMode ? "text-xl font-black mb-6 text-white" : "text-xl font-black mb-6 text-slate-900"}>2D Blast Furnace Fleet Overview</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-                    {Object.entries(fleetData).map(([eq, data]) => {
-                      let gradientStart, gradientEnd;
-                      if (data.status === 'OPTIMAL') { gradientStart = '#10b981'; gradientEnd = '#0d9488'; }
-                      else if (data.status === 'NORMAL') { gradientStart = '#3b82f6'; gradientEnd = '#2563eb'; }
-                      else if (data.status === 'WARNING') { gradientStart = '#f97316'; gradientEnd = '#ea580c'; }
-                      else if (data.status === 'CRITICAL') { gradientStart = '#ef4444'; gradientEnd = '#dc2626'; }
-                      else { gradientStart = '#ec4899'; gradientEnd = '#db2777'; }
-
-                      return (
-                        <div 
-                          key={eq} 
+                {/* Header & Equipment Selector */}
+                <div className={darkMode ? "backdrop-blur-xl border p-6 rounded-2xl bg-slate-900/70 border-blue-800/30" : "backdrop-blur-xl border p-6 rounded-2xl bg-white/70 border-blue-200/50 shadow-sm"}>
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+                    <div>
+                      <h3 className={darkMode ? "text-2xl font-black text-white" : "text-2xl font-black text-slate-900"}>Equipment Comparison Dashboard</h3>
+                      <p className={darkMode ? "text-slate-400 mt-1" : "text-slate-600 mt-1"}>Compare performance metrics across all equipment</p>
+                    </div>
+                    <div className="flex gap-2">
+                      {Object.keys(fleetData).map((eq) => (
+                        <button
+                          key={eq}
+                          onClick={() => setSelectedEq(eq)}
                           className={
                             selectedEq === eq
-                              ? (darkMode
-                                  ? "p-4 rounded-2xl border transition-all hover:scale-105 cursor-pointer bg-emerald-900/20 border-emerald-500/30 shadow-lg"
-                                  : "p-4 rounded-2xl border transition-all hover:scale-105 cursor-pointer bg-emerald-50 border-emerald-200/50 shadow-md")
+                              ? "px-5 py-2 rounded-xl text-sm font-black bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg"
                               : (darkMode
-                                  ? "p-4 rounded-2xl border transition-all hover:scale-105 cursor-pointer bg-slate-800/40 border-slate-700/30"
-                                  : "p-4 rounded-2xl border transition-all hover:scale-105 cursor-pointer bg-slate-50 border-slate-200/50")
+                                  ? "px-5 py-2 rounded-xl text-sm font-black bg-slate-700 text-slate-300 hover:bg-slate-600"
+                                  : "px-5 py-2 rounded-xl text-sm font-black bg-slate-200 text-slate-700 hover:bg-slate-300")
                           }
-                          onClick={() => setSelectedEq(eq)}
                         >
-                          <div className="text-center mb-3">
-                            <span className={darkMode ? "text-lg font-black text-white" : "text-lg font-black text-slate-900"}>{eq}</span>
-                            <span className={
-                              data.status === 'OPTIMAL' ? "block text-xs font-black uppercase px-2 py-0.5 rounded-full ml-2 bg-emerald-500/20 text-emerald-400" :
-                              data.status === 'NORMAL' ? "block text-xs font-black uppercase px-2 py-0.5 rounded-full ml-2 bg-blue-500/20 text-blue-400" :
-                              data.status === 'WARNING' ? "block text-xs font-black uppercase px-2 py-0.5 rounded-full ml-2 bg-orange-500/20 text-orange-400" :
-                              data.status === 'CRITICAL' ? "block text-xs font-black uppercase px-2 py-0.5 rounded-full ml-2 bg-red-500/20 text-red-400" :
-                              "block text-xs font-black uppercase px-2 py-0.5 rounded-full ml-2 bg-pink-500/20 text-pink-400"
-                            }>{data.status}</span>
-                          </div>
-                          {/* 2D Furnace SVG */}
-                          <div className="flex justify-center py-4">
-                            <svg viewBox="0 0 120 180" className="w-full max-w-[120px]">
-                              <defs>
-                                <linearGradient id={"furnaceGradient-" + eq} x1="0%" y1="0%" x2="100%" y2="100%">
-                                  <stop offset="0%" stopColor={gradientStart}/>
-                                  <stop offset="100%" stopColor={gradientEnd}/>
-                                </linearGradient>
-                                <linearGradient id={"bodyGradient-" + eq} x1="0%" y1="0%" x2="0%" y2="100%">
-                                  <stop offset="0%" stopColor={darkMode ? '#334155' : '#f8fafc'} />
-                                  <stop offset="100%" stopColor={darkMode ? '#1e293b' : '#e2e8f0'} />
-                                </linearGradient>
-                                <filter id={"glow-" + eq}>
-                                  <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-                                  <feMerge>
-                                    <feMergeNode in="coloredBlur"/>
-                                    <feMergeNode in="SourceGraphic"/>
-                                  </feMerge>
-                                </filter>
-                              </defs>
-                              
-                              {/* Furnace Body Shadow */}
-                              <rect x="23" y="23" width="80" height="120" rx="10" ry="10" fill="rgba(0,0,0,0.1)"/>
-                              
-                              {/* Furnace Body */}
-                              <rect x="20" y="20" width="80" height="120" rx="10" ry="10" 
-                                fill={"url(#bodyGradient-" + eq + ")"} 
-                                stroke={"url(#furnaceGradient-" + eq + ")"} 
-                                strokeWidth="4"
-                                filter={"url(#glow-" + eq + ")"}
-                              />
-                              
-                              {/* Top Stack */}
-                              <rect x="35" y="8" width="50" height="15" rx="4" 
-                                fill={darkMode ? '#475569' : '#cbd5e1'} 
-                                stroke={"url(#furnaceGradient-" + eq + ")"} 
-                                strokeWidth="2"
-                              />
-                              
-                              {/* Cooling Panels */}
-                              {[32, 62, 92].map((y, i) => (
-                                <g key={i}>
-                                  {/* Left Panel */}
-                                  <rect x="27" y={y} width="28" height="18" rx="3" 
-                                    fill={
-                                      data.temp > 10 ? (i === 1 ? '#ef4444' : '#f87171') : '#10b981'
-                                    } 
-                                    className={data.temp > 10 ? 'animate-pulse' : ''}
-                                    opacity="0.9"
-                                  />
-                                  <rect x="29" y={y+2} width="10" height="4" rx="1" fill="rgba(255,255,255,0.3)"/>
-                                  
-                                  {/* Right Panel */}
-                                  <rect x="65" y={y} width="28" height="18" rx="3" 
-                                    fill={
-                                      data.temp > 10 ? (i === 0 ? '#ef4444' : '#f87171') : '#10b981'
-                                    } 
-                                    className={data.temp > 10 ? 'animate-pulse' : ''}
-                                    opacity="0.9"
-                                  />
-                                  <rect x="67" y={y+2} width="10" height="4" rx="1" fill="rgba(255,255,255,0.3)"/>
-                                </g>
-                              ))}
-                              
-                              {/* Flow Pipe */}
-                              <rect x="15" y="148" width="90" height="12" rx="6" 
-                                fill={darkMode ? '#0f172a' : '#f1f5f9'} 
-                                stroke={darkMode ? '#334155' : '#e2e8f0'}
-                                strokeWidth="2"
-                              />
-                              
-                              {/* Flow Indicator */}
-                              <rect x="20" y="151" width="80" height="6" rx="3" 
-                                fill={
-                                  data.flow < 40 ? '#ef4444' : 
-                                  data.flow < 60 ? '#f59e0b' : 
-                                  '#06b6d4'
-                                }
-                              >
-                                <animate attributeName="opacity" values="0.7;1;0.7" dur="1.5s" repeatCount="indefinite"/>
-                              </rect>
-                              
-                              <circle cx="60" cy="154" r="7" 
-                                fill={
-                                  data.flow < 40 ? '#ef4444' : 
-                                  data.flow < 60 ? '#f59e0b' : 
-                                  '#06b6d4'
-                                }
-                                filter={"url(#glow-" + eq + ")"}
-                              >
-                                <animate attributeName="r" values="5;7;5" dur="1.2s" repeatCount="indefinite"/>
-                              </circle>
-                              
-                              {/* Bolt Decorations */}
-                              <circle cx="30" cy="30" r="2" fill={darkMode ? '#64748b' : '#94a3b8'} />
-                              <circle cx="90" cy="30" r="2" fill={darkMode ? '#64748b' : '#94a3b8'} />
-                              <circle cx="30" cy="130" r="2" fill={darkMode ? '#64748b' : '#94a3b8'} />
-                              <circle cx="90" cy="130" r="2" fill={darkMode ? '#64748b' : '#94a3b8'} />
-                            </svg>
-                          </div>
-                          <div className="mt-3 grid grid-cols-2 gap-2 text-center">
+                          {eq}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Equipment Cards Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    {Object.entries(fleetData).map(([eq, data], idx) => {
+                      const statusColors = {
+                        'OPTIMAL': { bg: 'bg-emerald-900/20', border: 'border-emerald-500/30', text: 'text-emerald-500' },
+                        'NORMAL': { bg: 'bg-blue-900/20', border: 'border-blue-500/30', text: 'text-blue-500' },
+                        'WARNING': { bg: 'bg-orange-900/20', border: 'border-orange-500/30', text: 'text-orange-500' },
+                        'CRITICAL': { bg: 'bg-red-900/20', border: 'border-red-500/30', text: 'text-red-500' }
+                      };
+                      const colors = statusColors[data.status] || statusColors['NORMAL'];
+                      
+                      return (
+                        <div 
+                          key={eq}
+                          onClick={() => setSelectedEq(eq)}
+                          className={`p-6 rounded-2xl border-2 transition-all hover:scale-105 cursor-pointer ${
+                            selectedEq === eq
+                              ? (darkMode
+                                  ? colors.bg + ' ' + colors.border.replace('500/30', '500/50') + ' shadow-xl'
+                                  : colors.bg + ' ' + colors.border.replace('500/30', '500/40') + ' shadow-lg')
+                              : (darkMode
+                                  ? 'bg-slate-800/30 border-slate-700/30'
+                                  : 'bg-slate-50 border-slate-200/50')
+                          }`}
+                        >
+                          <div className="flex items-start justify-between mb-4">
                             <div>
-                              <p className={darkMode ? "text-[10px] font-black uppercase text-slate-500" : "text-[10px] font-black uppercase text-slate-600"}>Flow</p>
-                              <p className={darkMode ? "text-sm font-black text-white" : "text-sm font-black text-slate-900"}>{data.flow} m³/h</p>
+                              <h4 className={darkMode ? "text-xl font-black text-white mb-2" : "text-xl font-black text-slate-900 mb-2"}>Blast Furnace {eq.split('-')[1]}</h4>
+                              <p className={darkMode ? "text-slate-400" : "text-slate-600"}>{['East Plant', 'West Plant', 'North Plant', 'South Plant', 'Central Plant'][idx % 5]}</p>
+                            </div>
+                            {data.status === 'CRITICAL' ? (
+                              <AlertTriangle size={28} className="text-red-500" />
+                            ) : (
+                              <CheckCircle2 size={28} className={colors.text} />
+                            )}
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                <Zap size={18} className={darkMode ? "text-yellow-400" : "text-yellow-600"} />
+                                <span className={darkMode ? "text-sm text-slate-400" : "text-sm text-slate-600"}>Efficiency</span>
+                              </div>
+                              <p className={darkMode ? "text-xl font-black text-white" : "text-xl font-black text-slate-900"}>{Math.round((data.flow / 60) * 100)}%</p>
                             </div>
                             <div>
-                              <p className={darkMode ? "text-[10px] font-black uppercase text-slate-500" : "text-[10px] font-black uppercase text-slate-600"}>Temp</p>
-                              <p className={darkMode ? "text-sm font-black text-white" : "text-sm font-black text-slate-900"}>{data.temp}°C</p>
+                              <div className="flex items-center gap-2 mb-1">
+                                <Thermometer size={18} className={darkMode ? "text-orange-400" : "text-orange-600"} />
+                                <span className={darkMode ? "text-sm text-slate-400" : "text-sm text-slate-600"}>Temp</span>
+                              </div>
+                              <p className={darkMode ? "text-xl font-black text-white" : "text-xl font-black text-slate-900"}>{data.temp}°C</p>
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                <Droplets size={18} className={darkMode ? "text-blue-400" : "text-blue-600"} />
+                                <span className={darkMode ? "text-sm text-slate-400" : "text-sm text-slate-600"}>Flow</span>
+                              </div>
+                              <p className={darkMode ? "text-xl font-black text-white" : "text-xl font-black text-slate-900"}>{data.flow} m³/h</p>
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                <TrendingUp size={18} className={darkMode ? "text-emerald-400" : "text-emerald-600"} />
+                                <span className={darkMode ? "text-sm text-slate-400" : "text-sm text-slate-600"}>Uptime</span>
+                              </div>
+                              <p className={darkMode ? "text-xl font-black text-white" : "text-xl font-black text-slate-900"}>{90 + idx * 2}%</p>
                             </div>
                           </div>
                         </div>
                       );
                     })}
                   </div>
+
+                  {/* Charts Grid */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Efficiency Bar Chart */}
+                    <div className={darkMode ? "backdrop-blur-xl border p-6 rounded-2xl bg-slate-900/70 border-blue-800/30" : "backdrop-blur-xl border p-6 rounded-2xl bg-white/70 border-blue-200/50 shadow-sm"}>
+                      <h4 className={darkMode ? "text-lg font-black mb-6 text-white flex items-center gap-2" : "text-lg font-black mb-6 text-slate-900 flex items-center gap-2"}>
+                        <TrendingUp size={20} className={darkMode ? "text-emerald-400" : "text-emerald-600"} />
+                        Efficiency Comparison (%)
+                      </h4>
+                      <div className="h-72">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={Object.entries(fleetData).map(([name, data]) => ({ name, efficiency: Math.round((data.flow / 60) * 100) }))}>
+                            <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? '#1e293b' : '#e2e8f0'} vertical={false} />
+                            <XAxis dataKey="name" stroke={darkMode ? '#64748b' : '#64748b'} fontSize={12} tickLine={false} axisLine={false} />
+                            <YAxis stroke={darkMode ? '#64748b' : '#64748b'} fontSize={12} tickLine={false} axisLine={false} domain={[0, 100]} />
+                            <Tooltip 
+                              contentStyle={{ backgroundColor: darkMode ? '#020617' : '#ffffff', border: "1px solid " + (darkMode ? '#1e40af' : '#bfdbfe'), borderRadius: '8px', fontSize: '12px' }}
+                              itemStyle={{ fontWeight: 'bold' }}
+                            />
+                            <Bar dataKey="efficiency" radius={[8,8,0,0]}>
+                              {Object.entries(fleetData).map(([id, data], index) => {
+                                let fill;
+                                if (data.status === 'OPTIMAL') fill = 'url(#colorEffOpt)';
+                                else if (data.status === 'NORMAL') fill = 'url(#colorEffNorm)';
+                                else if (data.status === 'WARNING') fill = 'url(#colorEffWarn)';
+                                else if (data.status === 'CRITICAL') fill = 'url(#colorEffCrit)';
+                                else fill = 'url(#colorEffNorm)';
+                                return <Cell key={"cell-" + index} fill={fill} />;
+                              })}
+                              <defs>
+                                <linearGradient id="colorEffOpt" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="0%" stopColor="#10b981" />
+                                  <stop offset="100%" stopColor="#059669" />
+                                </linearGradient>
+                                <linearGradient id="colorEffNorm" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="0%" stopColor="#3b82f6" />
+                                  <stop offset="100%" stopColor="#2563eb" />
+                                </linearGradient>
+                                <linearGradient id="colorEffWarn" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="0%" stopColor="#f59e0b" />
+                                  <stop offset="100%" stopColor="#d97706" />
+                                </linearGradient>
+                                <linearGradient id="colorEffCrit" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="0%" stopColor="#ef4444" />
+                                  <stop offset="100%" stopColor="#dc2626" />
+                                </linearGradient>
+                              </defs>
+                            </Bar>
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+
+                    {/* Performance Radar Chart */}
+                    <div className={darkMode ? "backdrop-blur-xl border p-6 rounded-2xl bg-slate-900/70 border-blue-800/30" : "backdrop-blur-xl border p-6 rounded-2xl bg-white/70 border-blue-200/50 shadow-sm"}>
+                      <h4 className={darkMode ? "text-lg font-black mb-6 text-white flex items-center gap-2" : "text-lg font-black mb-6 text-slate-900 flex items-center gap-2"}>
+                        <Activity size={20} className={darkMode ? "text-blue-400" : "text-blue-600"} />
+                        Performance Radar
+                      </h4>
+                      <div className="h-72">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <RadarChart data={Object.entries(fleetData).map(([name, data]) => ({
+                            subject: name,
+                            Efficiency: Math.round((data.flow / 60) * 100),
+                            'Flow Rate': Math.round((data.flow / 60) * 100),
+                            'Temp Stability': 100 - data.temp * 3,
+                            Uptime: 90 + Object.keys(fleetData).indexOf(name) * 2,
+                            Health: 100 - (data.status === 'CRITICAL' ? 50 : data.status === 'WARNING' ? 25 : 0)
+                          })).slice(0, 3)}>
+                            <PolarGrid stroke={darkMode ? '#334155' : '#e2e8f0'} />
+                            <PolarAngleAxis dataKey="subject" stroke={darkMode ? '#94a3b8' : '#64748b'} fontSize={12} />
+                            <PolarRadiusAxis angle={90} domain={[0, 100]} stroke={darkMode ? '#475569' : '#94a3b8'} />
+                            <Radar name="BF-01" dataKey="Efficiency" stroke="#10b981" fill="#10b981" fillOpacity={0.5} />
+                            <Radar name="BF-02" dataKey="Flow Rate" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.3} />
+                            <Radar name="BF-03" dataKey="Temp Stability" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.2} />
+                            <Legend />
+                            <Tooltip 
+                              contentStyle={{ backgroundColor: darkMode ? '#020617' : '#ffffff', border: "1px solid " + (darkMode ? '#1e40af' : '#bfdbfe'), borderRadius: '8px', fontSize: '12px' }}
+                            />
+                          </RadarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Comparison Charts */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Flow Rate Comparison */}
-                  <div className={darkMode ? "backdrop-blur-xl border p-6 rounded-2xl bg-slate-900/70 border-emerald-800/30" : "backdrop-blur-xl border p-6 rounded-2xl bg-white/70 border-emerald-200/50 shadow-sm"}>
-                    <h4 className={darkMode ? "text-sm font-black uppercase tracking-widest mb-6 text-slate-300" : "text-sm font-black uppercase tracking-widest mb-6 text-slate-700"}>Flow Rate Comparison (m³/h)</h4>
-                    <div className="h-72">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={flowChartData}>
-                          <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? '#1e293b' : '#e2e8f0'} vertical={false} />
-                          <XAxis dataKey="name" stroke={darkMode ? '#64748b' : '#64748b'} fontSize={10} tickLine={false} axisLine={false} />
-                          <YAxis stroke={darkMode ? '#64748b' : '#64748b'} fontSize={10} tickLine={false} axisLine={false} />
-                          <Tooltip 
-                            contentStyle={{ backgroundColor: darkMode ? '#020617' : '#ffffff', border: "1px solid " + (darkMode ? '#065f46' : '#a7f3d0'), borderRadius: '8px', fontSize: '12px' }}
-                            itemStyle={{ fontWeight: 'bold' }}
+                {/* Detailed View & 2D Furnace */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Predictive Health Score */}
+                  <div className={darkMode ? "backdrop-blur-xl border p-6 rounded-2xl bg-slate-900/70 border-blue-800/30" : "backdrop-blur-xl border p-6 rounded-2xl bg-white/70 border-blue-200/50 shadow-sm"}>
+                    <div className="flex items-center justify-between mb-6">
+                      <h4 className={darkMode ? "text-lg font-black text-white" : "text-lg font-black text-slate-900"}>
+                        <Activity size={20} className="inline mr-2 text-indigo-400" />
+                        Predictive Health Score
+                      </h4>
+                      <AlertTriangle size={20} className={darkMode ? "text-yellow-400" : "text-yellow-600"} />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="relative w-32 h-32">
+                        <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
+                          <circle cx="50" cy="50" r="40" fill="none" stroke={darkMode ? '#334155' : '#e2e8f0'} strokeWidth="8" />
+                          <circle 
+                            cx="50" cy="50" r="40" 
+                            fill="none" 
+                            stroke="url(#healthGradient)" 
+                            strokeWidth="8" 
+                            strokeLinecap="round" 
+                            strokeDasharray={`${2 * Math.PI * 40 * (68 + Object.keys(fleetData).indexOf(selectedEq) * 3) / 100} ${2 * Math.PI * 40}`}
                           />
-                          <Bar dataKey="flow" radius={[4,4,0,0]}>
-                            {Object.entries(fleetData).map(([id, data], index) => {
-                              let fill;
-                              if (data.status === 'OPTIMAL') fill = '#10b981';
-                              else if (data.status === 'NORMAL') fill = '#3b82f6';
-                              else if (data.status === 'WARNING') fill = '#f97316';
-                              else if (data.status === 'CRITICAL') fill = '#ef4444';
-                              else fill = '#ec4899';
-                              return <Cell key={"cell-" + index} fill={fill} />;
-                            })}
-                          </Bar>
-                        </BarChart>
-                      </ResponsiveContainer>
+                          <defs>
+                            <linearGradient id="healthGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                              <stop offset="0%" stopColor="#f59e0b" />
+                              <stop offset="100%" stopColor="#10b981" />
+                            </linearGradient>
+                          </defs>
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className={darkMode ? "text-3xl font-black text-white" : "text-3xl font-black text-slate-900"}>
+                            {68 + Object.keys(fleetData).indexOf(selectedEq) * 3}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex-1 ml-6">
+                        <div className="mb-4">
+                          <p className={darkMode ? "text-sm font-bold text-slate-400 uppercase tracking-wider" : "text-sm font-bold text-slate-600 uppercase tracking-wider"}>Status</p>
+                          <p className={darkMode ? "text-sm font-black text-amber-400" : "text-sm font-black text-amber-600"}>Good</p>
+                        </div>
+                        <div>
+                          <p className={darkMode ? "text-sm font-bold text-slate-400 uppercase tracking-wider" : "text-sm font-bold text-slate-600 uppercase tracking-wider"}>Prediction</p>
+                          <p className={darkMode ? "text-sm font-black text-amber-400" : "text-sm font-black text-amber-600"}>
+                            {fleetData[selectedEq].status === 'CRITICAL' ? '⚠️ Immediate attention needed' : 'Schedule preventive maintenance within 2 weeks'}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Temperature Comparison */}
-                  <div className={darkMode ? "backdrop-blur-xl border p-6 rounded-2xl bg-slate-900/70 border-emerald-800/30" : "backdrop-blur-xl border p-6 rounded-2xl bg-white/70 border-emerald-200/50 shadow-sm"}>
-                    <h4 className={darkMode ? "text-sm font-black uppercase tracking-widest mb-6 text-slate-300" : "text-sm font-black uppercase tracking-widest mb-6 text-slate-700"}>Temperature Comparison (°C)</h4>
-                    <div className="h-72">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={tempChartData}>
-                          <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? '#1e293b' : '#e2e8f0'} vertical={false} />
-                          <XAxis dataKey="name" stroke={darkMode ? '#64748b' : '#64748b'} fontSize={10} tickLine={false} axisLine={false} />
-                          <YAxis stroke={darkMode ? '#64748b' : '#64748b'} fontSize={10} tickLine={false} axisLine={false} />
-                          <Tooltip 
-                            contentStyle={{ backgroundColor: darkMode ? '#020617' : '#ffffff', border: "1px solid " + (darkMode ? '#065f46' : '#a7f3d0'), borderRadius: '8px', fontSize: '12px' }}
-                            itemStyle={{ fontWeight: 'bold' }}
+                  {/* 2D Furnace Visualization (New Style) */}
+                  <div className="lg:col-span-2">
+                    <div className={darkMode ? "backdrop-blur-xl border p-6 rounded-2xl bg-gradient-to-br from-emerald-900/50 to-slate-900/80 border-emerald-800/30" : "backdrop-blur-xl border p-6 rounded-2xl bg-gradient-to-br from-emerald-50/70 to-slate-50/80 border-emerald-200/50 shadow-sm"}>
+                      <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center">
+                            <BarChart3 size={24} className="text-white" />
+                          </div>
+                          <div>
+                            <h4 className={darkMode ? "text-xl font-black text-white" : "text-xl font-black text-slate-900"}>2D Blast Furnace: {selectedEq}</h4>
+                            <p className={darkMode ? "text-slate-400 text-sm" : "text-slate-600 text-sm"}>Real-time Operation Visualization</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={darkMode ? "px-3 py-1 rounded-full text-xs font-black bg-slate-700 text-slate-200" : "px-3 py-1 rounded-full text-xs font-black bg-slate-200 text-slate-700"}>
+                            LIVE
+                          </span>
+                          <CheckCircle2 size={20} className={darkMode ? "text-emerald-400" : "text-emerald-600"} />
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-center">
+                        <svg viewBox="0 0 200 300" className="w-full max-w-[300px]">
+                          <defs>
+                            <linearGradient id="furnaceBodyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                              <stop offset="0%" stopColor={darkMode ? '#1e293b' : '#f1f5f9'} />
+                              <stop offset="50%" stopColor={darkMode ? '#0f172a' : '#e2e8f0'} />
+                              <stop offset="100%" stopColor={darkMode ? '#020617' : '#cbd5e1'} />
+                            </linearGradient>
+                            <radialGradient id="coreGlow">
+                              <stop offset="0%" stopColor="#f59e0b" />
+                              <stop offset="50%" stopColor="#d97706" />
+                              <stop offset="100%" stopColor="#78350f" />
+                            </radialGradient>
+                          </defs>
+
+                          {/* Background Pattern */}
+                          <pattern id="smallGrid" width="10" height="10" patternUnits="userSpaceOnUse">
+                            <circle cx="5" cy="5" r="1" fill={darkMode ? 'rgba(148,163,184,0.1)' : 'rgba(100,116,139,0.1)'} />
+                          </pattern>
+                          <rect width="200" height="300" fill="url(#smallGrid)" />
+
+                          {/* Furnace Outer Body */}
+                          <rect x="40" y="80" width="120" height="180" rx="20" ry="20" 
+                            fill="url(#furnaceBodyGradient)" 
+                            stroke="#3b82f6" 
+                            strokeWidth="3"
                           />
-                          <Bar dataKey="temp" radius={[4,4,0,0]}>
-                            {Object.entries(fleetData).map(([id, data], index) => {
-                              let fill;
-                              if (data.status === 'OPTIMAL') fill = '#10b981';
-                              else if (data.status === 'NORMAL') fill = '#3b82f6';
-                              else if (data.status === 'WARNING') fill = '#f97316';
-                              else if (data.status === 'CRITICAL') fill = '#ef4444';
-                              else fill = '#ec4899';
-                              return <Cell key={"cell-" + index} fill={fill} />;
-                            })}
-                          </Bar>
-                        </BarChart>
-                      </ResponsiveContainer>
+                          
+                          {/* Top Stack */}
+                          <polygon points="100,30 60,80 140,80" 
+                            fill={darkMode ? '#334155' : '#cbd5e1'} 
+                            stroke="#3b82f6" 
+                            strokeWidth="2"
+                          />
+                          <rect x="85" y="25" width="30" height="20" rx="5" 
+                            fill={darkMode ? '#475569' : '#94a3b8'}
+                          />
+                          
+                          {/* Hot Core */}
+                          <ellipse cx="100" cy="180" rx="40" ry="60" 
+                            fill="url(#coreGlow)" 
+                            opacity={0.8}
+                          >
+                            <animate attributeName="opacity" values="0.7;0.9;0.7" dur="2s" repeatCount="indefinite" />
+                          </ellipse>
+                          
+                          {/* Particles Rising */}
+                          {[...Array(8)].map((_, i) => (
+                            <circle 
+                              key={i} 
+                              cx={90 + (i % 3) * 10} 
+                              cy={120 - (i * 10)} 
+                              r={2} 
+                              fill="#facc15"
+                              opacity={0.8}
+                            >
+                              <animate 
+                                attributeName="cy" 
+                                values={`${120 - (i * 10)};${40 - (i * 10)};${120 - (i * 10)}`} 
+                                dur={`${2 + i * 0.2}s`} 
+                                repeatCount="indefinite"
+                              />
+                              <animate 
+                                attributeName="opacity" 
+                                values="0;1;0" 
+                                dur={`${2 + i * 0.2}s`} 
+                                repeatCount="indefinite"
+                              />
+                            </circle>
+                          ))}
+                          
+                          {/* Temperature Zones */}
+                          <rect x="50" y="100" width="100" height="20" rx="5" 
+                            fill="#10b981" 
+                            opacity={0.7}
+                          />
+                          <rect x="50" y="130" width="100" height="20" rx="5" 
+                            fill="#3b82f6" 
+                            opacity={0.7}
+                          />
+                          <rect x="50" y="160" width="100" height="20" rx="5" 
+                            fill="#f59e0b" 
+                            opacity={0.7}
+                          />
+                          <rect x="50" y="190" width="100" height="20" rx="5" 
+                            fill="#ef4444" 
+                            opacity={0.7}
+                          />
+                          
+                          {/* Cooling Rings */}
+                          {[95, 125, 155, 185, 215].map((y, i) => (
+                            <circle 
+                              key={i} 
+                              cx={50} 
+                              cy={y} 
+                              r={4} 
+                              fill={fleetData[selectedEq].temp > 10 ? '#ef4444' : '#10b981'}
+                            />
+                          ))}
+                          {[95, 125, 155, 185, 215].map((y, i) => (
+                            <circle 
+                              key={i} 
+                              cx={150} 
+                              cy={y} 
+                              r={4} 
+                              fill={fleetData[selectedEq].temp > 10 ? '#f97316' : '#10b981'}
+                            />
+                          ))}
+                          
+                          {/* Bottom Tap Hole */}
+                          <rect x="60" y="260" width="80" height="18" rx="9" 
+                            fill={darkMode ? '#1f2937' : '#cbd5e1'}
+                          />
+                        </svg>
+                      </div>
                     </div>
                   </div>
-                </div>
-
-                {/* Detailed Comparison Table */}
-                <div className={darkMode ? "backdrop-blur-xl border rounded-2xl overflow-hidden bg-slate-900/70 border-emerald-800/30" : "backdrop-blur-xl border rounded-2xl overflow-hidden bg-white/70 border-emerald-200/50 shadow-sm"}>
-                  <h4 className={darkMode ? "text-sm font-black uppercase tracking-widest p-6 pb-4 text-slate-300" : "text-sm font-black uppercase tracking-widest p-6 pb-4 text-slate-700"}>Detailed Metrics Comparison</h4>
-                  <table className="w-full text-left">
-                    <thead className={darkMode ? "bg-slate-800/50" : "bg-emerald-50/50"}>
-                      <tr>
-                        <th className={darkMode ? "px-6 py-4 text-xs font-black uppercase tracking-widest text-slate-500" : "px-6 py-4 text-xs font-black uppercase tracking-widest text-slate-600"}>Equipment</th>
-                        <th className={darkMode ? "px-6 py-4 text-xs font-black uppercase tracking-widest text-slate-500" : "px-6 py-4 text-xs font-black uppercase tracking-widest text-slate-600"}>Status</th>
-                        <th className={darkMode ? "px-6 py-4 text-xs font-black uppercase tracking-widest text-slate-500" : "px-6 py-4 text-xs font-black uppercase tracking-widest text-slate-600"}>Flow (m³/h)</th>
-                        <th className={darkMode ? "px-6 py-4 text-xs font-black uppercase tracking-widest text-slate-500" : "px-6 py-4 text-xs font-black uppercase tracking-widest text-slate-600"}>Temp (°C)</th>
-                        <th className={darkMode ? "px-6 py-4 text-xs font-black uppercase tracking-widest text-slate-500" : "px-6 py-4 text-xs font-black uppercase tracking-widest text-slate-600"}>Flow Trend</th>
-                      </tr>
-                    </thead>
-                    <tbody className={darkMode ? "divide-y divide-emerald-800/20" : "divide-y divide-emerald-200/30"}>
-                      {Object.entries(fleetData).map(([id, data]) => (
-                        <tr key={id} className={darkMode ? "transition-colors hover:bg-slate-800/30" : "transition-colors hover:bg-emerald-50/30"}>
-                          <td className={darkMode ? "px-6 py-4 text-sm font-bold text-white" : "px-6 py-4 text-sm font-bold text-slate-900"}>{id}</td>
-                          <td className="px-6 py-4">
-                            <span className={
-                              data.status === 'OPTIMAL' ? "px-3 py-1 rounded-full text-xs font-black bg-emerald-900/30 text-emerald-500" :
-                              data.status === 'NORMAL' ? "px-3 py-1 rounded-full text-xs font-black bg-blue-900/30 text-blue-500" :
-                              data.status === 'WARNING' ? "px-3 py-1 rounded-full text-xs font-black bg-orange-900/30 text-orange-500" :
-                              data.status === 'CRITICAL' ? "px-3 py-1 rounded-full text-xs font-black bg-red-900/30 text-red-500" :
-                              "px-3 py-1 rounded-full text-xs font-black bg-pink-900/30 text-pink-500"
-                            }>{data.status}</span>
-                          </td>
-                          <td className={darkMode ? "px-6 py-4 text-sm text-slate-300" : "px-6 py-4 text-sm text-slate-700"}>{data.flow}</td>
-                          <td className={darkMode ? "px-6 py-4 text-sm text-slate-300" : "px-6 py-4 text-sm text-slate-700"}>{data.temp}</td>
-                          <td className="px-6 py-4">
-                            <span className={
-                              data.flowTrend?.includes('▼') ? "text-sm font-black text-orange-500" : "text-sm font-black text-emerald-500"
-                            }>{data.flowTrend || 'stable'}</span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
                 </div>
               </div>
             )}
