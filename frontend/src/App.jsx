@@ -543,8 +543,8 @@ Our Maintenance Wizard uses machine learning to analyze historical data and pred
   };
 
   return (
-    <div className={`min-h-screen font-sans transition-colors duration-300 ${darkMode ? 'bg-gradient-to-br from-emerald-950 via-slate-950 to-indigo-950 text-slate-100' : 'bg-gradient-to-br from-emerald-50 via-slate-50 to-indigo-50 text-slate-900'}`}>
-      <div className="flex min-h-screen">
+    <div className={`h-screen w-screen font-sans transition-colors duration-300 ${darkMode ? 'bg-gradient-to-br from-emerald-950 via-slate-950 to-indigo-950 text-slate-100' : 'bg-gradient-to-br from-emerald-50 via-slate-50 to-indigo-50 text-slate-900'}`}>
+      <div className="flex h-screen w-screen">
         {/* Sidebar */}
         <aside className={`${sidebarOpen ? 'w-64' : 'w-20'} ${darkMode ? 'bg-slate-900/80 border-emerald-800/30' : 'bg-white/80 border-emerald-200/50'} backdrop-blur-xl border-r transition-all duration-300 flex flex-col`}>
           <div className={`p-6 flex items-center gap-3 border-b ${darkMode ? 'border-emerald-800/20' : 'border-emerald-200/30'}`}>
